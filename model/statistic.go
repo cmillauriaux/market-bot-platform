@@ -7,6 +7,7 @@ import (
 
 type Statistic struct {
 	Date     time.Time
+	DateFin  time.Time
 	Min      int
 	Max      int
 	Delta    float64
@@ -15,5 +16,5 @@ type Statistic struct {
 }
 
 func (s *Statistic) Display() string {
-	return "DATE : " + fmt.Sprintf("%s", s.Date.String()) + "Min : " + fmt.Sprintf("%v", s.Min) + " Max : " + fmt.Sprintf("%v", s.Max) + " Value : " + fmt.Sprintf("%v", s.Value) + " Quantity : " + fmt.Sprintf("%f", s.Quantity) + " Delta : " + fmt.Sprintf("%f", s.Delta) + "%"
+	return fmt.Sprintf("%s", s.Date.String()) + "-" + fmt.Sprintf("%s", s.DateFin.String()) + "Min : " + fmt.Sprintf("%v", s.Min) + " Max : " + fmt.Sprintf("%v", s.Max) + " Value : " + fmt.Sprintf("%v", s.Value) + " Quantity : " + fmt.Sprintf("%f", s.Quantity) + " Delta : " + fmt.Sprintf("%f", s.Delta) + "%"
 }

@@ -40,12 +40,7 @@ func LoadHistory(filename string) (*History, error) {
 			break
 		}
 	}
-	log.Println("Load History complete : ", history.GetNbEvents(), " in ", counter.StopCount().Seconds(), "s")
-
-	// Compute days
-	counter.StartCount()
-	history.ComputeDays()
-	log.Println("Compute days complete : ", history.Days.Size(), " in ", counter.StopCount().Seconds(), "s")
+	log.Println("Load History complete in ", counter.StopCount().Seconds(), "s")
 
 	history.RefreshStatistics()
 
