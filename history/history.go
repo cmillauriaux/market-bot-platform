@@ -24,7 +24,7 @@ const (
 )
 
 type History struct {
-	realtime    *treemap.Map
+	Realtime    *treemap.Map
 	currentDate time.Time
 	days        *treemap.Map
 	Days        *treemap.Map
@@ -43,7 +43,7 @@ func InitHistory() (*History, error) {
 	Quarters := treemap.NewWith(god_utils.Int64Comparator)
 	Years := treemap.NewWith(god_utils.Int64Comparator)
 	return &History{
-		realtime: realtime,
+		Realtime: realtime,
 		days:     days,
 		Days:     Days,
 		Weeks:    Weeks,
@@ -54,7 +54,7 @@ func InitHistory() (*History, error) {
 
 func (h *History) InsertEvent(event *model.Event) error {
 	key := event.Date.UnixNano()
-	h.realtime.Put(key, event)
+	h.Realtime.Put(key, event)
 	if event.Date.Sub(h.currentDate) > h.getRangeStep(DAY) {
 		h.ComputeRealTime()
 	}
@@ -94,7 +94,10 @@ func (h *History) CompleteHistory(market market.Market, step time.Duration) erro
 func (h *History) GetRealtimeInformations(market market.Market) error {
 	counter := utils.Counter{}
 	counter.StartCount()
-	_, err := market.GetTransactions(time.Now().Truncate(time.Hour*24), time.Now())
+	events, err := market.GetTransactions(time.Now().Truncate(time.Hour*24), time.Now())
+	for _, event := range events {
+		h.Realtime.Put(event.Date.UnixNano(), event)
+	}
 	log.Println("Load real time informations in ", counter.StopCount().Seconds(), "s")
 	return err
 }
@@ -102,7 +105,7 @@ func (h *History) GetRealtimeInformations(market market.Market) error {
 func (h *History) ComputeRealTime() {
 	currentHistory := make([]*model.Event, 0)
 
-	it := h.realtime.Iterator()
+	it := h.Realtime.Iterator()
 	for it.Next() {
 		_, value := it.Key(), it.Value()
 		event := value.(*model.Event)
@@ -132,13 +135,13 @@ func (h *History) ComputeRealTime() {
 }
 
 func (h *History) removeRealTimeUntil(date time.Time) {
-	it := h.realtime.Iterator()
+	it := h.Realtime.Iterator()
 	for it.Next() {
 		key, value := it.Key(), it.Value()
 		event := value.(*model.Event)
 
 		if event.Date.Before(date) {
-			h.realtime.Remove(key)
+			h.Realtime.Remove(key)
 		}
 	}
 }
