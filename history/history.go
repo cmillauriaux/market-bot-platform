@@ -1,12 +1,15 @@
 package history
 
 import (
+	"errors"
 	"log"
 	"time"
 
+	"git.icysoft.fr/cedric/kraken-bot/utils"
 	"github.com/emirpasic/gods/maps/treemap"
-	"github.com/emirpasic/gods/utils"
+	god_utils "github.com/emirpasic/gods/utils"
 
+	"git.icysoft.fr/cedric/kraken-bot/market"
 	"git.icysoft.fr/cedric/kraken-bot/model"
 )
 
@@ -32,13 +35,13 @@ type History struct {
 }
 
 func InitHistory() (*History, error) {
-	realtime := treemap.NewWith(utils.Int64Comparator)
-	days := treemap.NewWith(utils.Int64Comparator)
-	Days := treemap.NewWith(utils.Int64Comparator)
-	Weeks := treemap.NewWith(utils.Int64Comparator)
-	Months := treemap.NewWith(utils.Int64Comparator)
-	Quarters := treemap.NewWith(utils.Int64Comparator)
-	Years := treemap.NewWith(utils.Int64Comparator)
+	realtime := treemap.NewWith(god_utils.Int64Comparator)
+	days := treemap.NewWith(god_utils.Int64Comparator)
+	Days := treemap.NewWith(god_utils.Int64Comparator)
+	Weeks := treemap.NewWith(god_utils.Int64Comparator)
+	Months := treemap.NewWith(god_utils.Int64Comparator)
+	Quarters := treemap.NewWith(god_utils.Int64Comparator)
+	Years := treemap.NewWith(god_utils.Int64Comparator)
 	return &History{
 		realtime: realtime,
 		days:     days,
@@ -56,6 +59,44 @@ func (h *History) InsertEvent(event *model.Event) error {
 		h.ComputeRealTime()
 	}
 	return nil
+}
+
+func (h *History) CompleteHistory(market market.Market, step time.Duration) error {
+	counter := utils.Counter{}
+	counter.StartCount()
+	// Find last history
+	key, _ := h.days.Max()
+	last, found := h.days.Get(key)
+	lastHistory := last.([]*model.Event)
+
+	if !found || len(lastHistory) == 0 {
+		return errors.New("History is empty")
+	}
+
+	currentDate := lastHistory[0].Date.Truncate(time.Hour * 24)
+
+	for currentDate.Before(time.Now().Truncate(time.Hour * 24)) {
+		statistic, err := market.GetStatistic(currentDate, currentDate.Add(time.Hour*24))
+		if err != nil {
+			return err
+		}
+
+		h.days.Put(statistic.Date.UnixNano(), statistic)
+		time.Sleep(market.GetSleepTimeBetweenRequests())
+		currentDate = currentDate.Add(step)
+	}
+
+	log.Println("Complete History complete in ", counter.StopCount().Seconds(), "s")
+
+	return nil
+}
+
+func (h *History) GetRealtimeInformations(market market.Market) error {
+	counter := utils.Counter{}
+	counter.StartCount()
+	_, err := market.GetTransactions(time.Now().Truncate(time.Hour*24), time.Now())
+	log.Println("Load real time informations in ", counter.StopCount().Seconds(), "s")
+	return err
 }
 
 func (h *History) ComputeRealTime() {
@@ -136,10 +177,10 @@ func (h *History) ComputeAverageValue(events []*model.Event) (int, float64) {
 
 func (h *History) RefreshStatistics() {
 	h.refreshStatistic(DAY)
-	//h.refreshStatistic(WEEK)
-	//h.refreshStatistic(MONTH)
-	//h.refreshStatistic(QUARTER)
-	//h.refreshStatistic(YEAR)
+	h.refreshStatistic(WEEK)
+	h.refreshStatistic(MONTH)
+	h.refreshStatistic(QUARTER)
+	h.refreshStatistic(YEAR)
 }
 
 func (h *History) refreshStatistic(r Range) {
@@ -164,7 +205,6 @@ func (h *History) refreshStatistic(r Range) {
 				statistic := h.ComputeStatistics(currentHistory)
 				statistic.Date = currentDate
 				statistic.DateFin = lastDate
-				log.Println(statistic.Display())
 
 				// Init list
 				currentDate = event.Date.Truncate(time.Hour * 24)
@@ -180,7 +220,7 @@ func (h *History) refreshStatistic(r Range) {
 	statistic := h.ComputeStatistics(currentHistory)
 	statistic.Date = currentDate
 	statistic.DateFin = lastDate
-	log.Println(statistic.Display())
+	//log.Println(statistic.Display())
 }
 
 func (h *History) ComputeStatistics(events []*model.Event) *model.Statistic {
