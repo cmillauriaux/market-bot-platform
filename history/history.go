@@ -5,12 +5,12 @@ import (
 	"log"
 	"time"
 
-	"git.icysoft.fr/cedric/kraken-bot/utils"
+	"github.com/cmillauriaux/market-bot-platform/utils"
 	"github.com/emirpasic/gods/maps/treemap"
 	god_utils "github.com/emirpasic/gods/utils"
 
-	"git.icysoft.fr/cedric/kraken-bot/market"
-	"git.icysoft.fr/cedric/kraken-bot/model"
+	"github.com/cmillauriaux/market-bot-platform/market"
+	"github.com/cmillauriaux/market-bot-platform/model"
 )
 
 type Range int

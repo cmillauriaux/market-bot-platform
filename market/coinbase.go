@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"time"
 
-	"git.icysoft.fr/cedric/kraken-bot/model"
+	"github.com/cmillauriaux/market-bot-platform/model"
 	ws "github.com/gorilla/websocket"
 	exchange "github.com/preichenberger/go-coinbase-exchange"
 )

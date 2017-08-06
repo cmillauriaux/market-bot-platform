@@ -3,8 +3,8 @@ package history
 import (
 	"log"
 
-	"git.icysoft.fr/cedric/kraken-bot/model"
-	"git.icysoft.fr/cedric/kraken-bot/utils"
+	"github.com/cmillauriaux/market-bot-platform/model"
+	"github.com/cmillauriaux/market-bot-platform/utils"
 )
 
 func LoadHistory(filename string) (*History, error) {

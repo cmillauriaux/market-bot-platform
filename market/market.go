@@ -3,7 +3,7 @@ package market
 import (
 	"time"
 
-	"git.icysoft.fr/cedric/kraken-bot/model"
+	"github.com/cmillauriaux/market-bot-platform/model"
 )
 
 type BroadcastEvent func(*model.Event) error

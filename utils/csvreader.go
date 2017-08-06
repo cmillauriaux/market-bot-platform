@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"time"
 
-	"git.icysoft.fr/cedric/kraken-bot/model"
+	"github.com/cmillauriaux/market-bot-platform/model"
 	uuid "github.com/satori/go.uuid"
 )
 

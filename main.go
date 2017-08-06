@@ -4,8 +4,8 @@ import (
 	"log"
 	"time"
 
-	"git.icysoft.fr/cedric/kraken-bot/history"
-	"git.icysoft.fr/cedric/kraken-bot/market"
+	"github.com/cmillauriaux/market-bot-platform/history"
+	"github.com/cmillauriaux/market-bot-platform/market"
 )
 
 func main() {
