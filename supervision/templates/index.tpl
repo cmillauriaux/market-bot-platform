@@ -42,6 +42,31 @@
                 </tr>
         </table>
         {{end}}
+        <h2>Last Hour Statistics</h2>
+        {{with .LastHourEvents}}
+        <table>
+                <tr>
+                    <td>Min value</td>
+                    <td>{{.Min}}</td>
+                </tr>
+                <tr>
+                    <td>Max value</td>
+                    <td>{{.Max}}</td>
+                </tr>
+                <tr>
+                    <td>Avg value</td>
+                    <td>{{.Value}}</td>
+                </tr>
+                <tr>
+                    <td>Delta (min/max)</td>
+                    <td>{{.Delta}}</td>
+                </tr>
+                <tr>
+                    <td>Quantity</td>
+                    <td>{{.Quantity}}</td>
+                </tr>
+        </table>
+        {{end}}
         </div>
         <a href="/realtime">Realtime details</a>
         {{template "footer"}}

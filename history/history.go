@@ -65,16 +65,22 @@ func (h *History) InsertEvent(event *model.Event) error {
 func (h *History) CompleteHistory(market market.Market, step time.Duration) error {
 	counter := utils.Counter{}
 	counter.StartCount()
+	currentDate := h.currentDate
 
-	for h.currentDate.Before(time.Now().Truncate(time.Hour * 24)) {
-		statistic, err := market.GetStatistic(h.currentDate, h.currentDate.Add(time.Hour*24))
+	for currentDate.Before(time.Now().Truncate(time.Hour * 24)) {
+		statistic, err := market.GetStatistic(currentDate, currentDate.Add(time.Hour*24))
+		statistic.Date = currentDate
+		statistic.DateFin = currentDate.Add(time.Hour * 24)
 		if err != nil {
 			return err
 		}
 
-		h.Days.Put(statistic.Date.UnixNano(), statistic)
+		if statistic.Value > 0 {
+			h.Days.Put(statistic.Date.UnixNano(), statistic)
+		}
+
 		time.Sleep(market.GetSleepTimeBetweenRequests())
-		h.currentDate = h.currentDate.Add(step)
+		currentDate = currentDate.Add(step)
 	}
 
 	h.RefreshStatistics()
@@ -91,6 +97,7 @@ func (h *History) GetRealtimeInformations(market market.Market) error {
 	for _, event := range events {
 		h.Realtime.Put(event.Date.UnixNano(), event)
 	}
+	h.ComputeRealTime()
 	log.Println("Load real time informations in ", counter.StopCount().Seconds(), "s")
 	return err
 }
@@ -117,7 +124,9 @@ func (h *History) ComputeRealTime() {
 			statistic := h.ComputeStatistics(currentHistory)
 			statistic.Date = h.currentDate
 			statistic.DateFin = event.Date
-			h.Days.Put(h.currentDate.UnixNano(), statistic)
+			if statistic.Value > 0 {
+				h.Days.Put(h.currentDate.UnixNano(), statistic)
+			}
 
 			// Init list
 			h.currentDate = event.Date.Truncate(time.Hour * 24)
@@ -179,6 +188,7 @@ func (h *History) ComputeAverageValue(events []*model.Event) (int, float64) {
 }
 
 func (h *History) RefreshStatistics() {
+	h.ComputeRealTime()
 	h.refreshStatistic(DAY)
 	h.refreshStatistic(WEEK)
 	h.refreshStatistic(MONTH)
@@ -208,7 +218,9 @@ func (h *History) refreshStatistic(r Range) {
 			aggregatedStatistic := h.AggregateStatistics(currentHistory)
 			aggregatedStatistic.Date = currentDate
 			aggregatedStatistic.DateFin = statistic.DateFin
-			h.putStatisticInHistory(aggregatedStatistic, r)
+			if aggregatedStatistic.Value > 0 {
+				h.putStatisticInHistory(aggregatedStatistic, r)
+			}
 
 			// Init list
 			currentDate = statistic.Date.Truncate(time.Hour * 24)
@@ -317,6 +329,19 @@ func (h *History) InstantStatistics() *model.Statistic {
 		_, value := it.Key(), it.Value()
 		event := value.(*model.Event)
 		events = append(events, event)
+	}
+	return h.ComputeStatistics(events)
+}
+
+func (h *History) LastHourEvents() *model.Statistic {
+	events := make([]*model.Event, 0)
+	it := h.Realtime.Iterator()
+	for it.Next() {
+		_, value := it.Key(), it.Value()
+		event := value.(*model.Event)
+		if event.Date.After(time.Now().Add(-time.Hour)) {
+			events = append(events, event)
+		}
 	}
 	return h.ComputeStatistics(events)
 }
