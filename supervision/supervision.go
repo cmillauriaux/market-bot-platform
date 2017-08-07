@@ -13,5 +13,11 @@ func RunServer(history *history.History) {
 	app.Get("/", func(ctx *neo.Ctx) (int, error) {
 		return 200, ctx.Res.Tpl("index", history)
 	})
+	app.Get("/history", func(ctx *neo.Ctx) (int, error) {
+		return 200, ctx.Res.Tpl("history", history)
+	})
+	app.Get("/realtime", func(ctx *neo.Ctx) (int, error) {
+		return 200, ctx.Res.Tpl("realtime", history)
+	})
 	app.Start()
 }

@@ -13,6 +13,7 @@ type Statistic struct {
 	Delta    float64
 	Value    int
 	Quantity float64
+	Partial  bool
 }
 
 func (s *Statistic) Display() string {

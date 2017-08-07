@@ -8,17 +8,42 @@
     <body>
         {{template "header"}}
         <div>
+        <h1>Preview</h1>
+        <h2>Realtime statistics</h2>
+        {{with .InstantStatistics}}
         <table>
-            {{range .Realtime.Values}}
                 <tr>
-                    <td>{{.OrderID}}</td>
+                    <td>Realtime from</td>
                     <td>{{.Date}}</td>
+                </tr>
+                <tr>
+                    <td>Realtime to</td>
+                    <td>{{.DateFin}}</td>
+                </tr>
+                <tr>
+                    <td>Min value</td>
+                    <td>{{.Min}}</td>
+                </tr>
+                <tr>
+                    <td>Max value</td>
+                    <td>{{.Max}}</td>
+                </tr>
+                <tr>
+                    <td>Avg value</td>
                     <td>{{.Value}}</td>
+                </tr>
+                <tr>
+                    <td>Delta (min/max)</td>
+                    <td>{{.Delta}}</td>
+                </tr>
+                <tr>
+                    <td>Quantity</td>
                     <td>{{.Quantity}}</td>
                 </tr>
-            {{end}}
         </table>
+        {{end}}
         </div>
+        <a href="/realtime">Realtime details</a>
         {{template "footer"}}
     </body>
 </html>

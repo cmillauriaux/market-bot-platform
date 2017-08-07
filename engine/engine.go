@@ -2,6 +2,7 @@ package engine
 
 import (
 	"log"
+	"time"
 
 	"github.com/cmillauriaux/market-bot-platform/history"
 	"github.com/cmillauriaux/market-bot-platform/market"
@@ -20,14 +21,14 @@ func Init(market market.Market) *Engine {
 }
 
 func (e *Engine) LoadHistory(fileName string) {
-	history, err := history.LoadHistory(".krakenEUR-lite.csv")
+	history, err := history.LoadHistory(".krakenEUR.csv")
 	if err != nil {
 		log.Fatal(err)
 	}
-	/*err = history.CompleteHistory(e.market, time.Hour*24)
+	err = history.CompleteHistory(e.market, time.Hour*24)
 	if err != nil {
 		log.Fatal(err)
-	}*/
+	}
 	err = history.GetRealtimeInformations(e.market)
 	if err != nil {
 		log.Fatal(err)
