@@ -3,35 +3,18 @@
 <html>
     <head>
         <title>Example</title>
+        <script src="https://www.amcharts.com/lib/3/amcharts.js"></script>
+        <script src="https://www.amcharts.com/lib/3/serial.js"></script>
+        <script src="https://www.amcharts.com/lib/3/plugins/export/export.min.js"></script>
+        <link rel="stylesheet" href="https://www.amcharts.com/lib/3/plugins/export/export.css" type="text/css" media="all" />
+        <script src="https://www.amcharts.com/lib/3/themes/light.js"></script>
     </head>
 
     <body>
         {{template "header"}}
-        <a href="/">Home</a>
         <div>
-        <h1>Preview</h1>
-        <h2>Years statistics</h2>
-        <table>
-                {{range .YearsStatistics}}
-                    <tr>
-                        <td>{{.Date}} à {{.DateFin}}</td>
-                        <td>{{.Min}}-{{.Max}} ({{.Delta}}%)</td>
-                        <td>{{.Value}}</td>
-                        <td>{{.Quantity}}</td>
-                    </tr>
-                {{end}}
-        </table>
-        <h2>Months statistics</h2>
-        <table>
-                {{range .MonthsStatistics}}
-                    <tr>
-                        <td>{{.Date}} à {{.DateFin}}</td>
-                        <td>{{.Min}}-{{.Max}} ({{.Delta}}%)</td>
-                        <td>{{.Value}}</td>
-                        <td>{{.Quantity}}</td>
-                    </tr>
-                {{end}}
-        </table>
+            <h1>History</h1>
+            
         </div>
         {{template "footer"}}
     </body>

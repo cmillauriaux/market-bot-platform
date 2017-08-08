@@ -9,7 +9,7 @@
         {{template "header"}}
         <div>
         <h1>Preview</h1>
-        <h2>Realtime statistics</h2>
+        <h2>24H statistics</h2>
         {{with .InstantStatistics}}
         <table>
                 <tr>
@@ -68,7 +68,6 @@
         </table>
         {{end}}
         </div>
-        <a href="/realtime">Realtime details</a>
         {{template "footer"}}
     </body>
 </html>

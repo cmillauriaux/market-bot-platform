@@ -94,12 +94,15 @@ func (h *History) GetRealtimeInformations(market market.Market) error {
 	counter := utils.Counter{}
 	counter.StartCount()
 	events, err := market.GetTransactions(time.Now().Truncate(time.Hour*24), time.Now())
+	if err != nil {
+		return err
+	}
 	for _, event := range events {
 		h.Realtime.Put(event.Date.UnixNano(), event)
 	}
 	h.ComputeRealTime()
 	log.Println("Load real time informations in ", counter.StopCount().Seconds(), "s")
-	return err
+	return nil
 }
 
 // ComputeRealTime look at every realtime event and make statistics if it's relevant
@@ -323,6 +326,11 @@ func (h *History) AggregateStatistics(events []*model.Statistic) *model.Statisti
 
 // Méthode pour la vue
 func (h *History) InstantStatistics() *model.Statistic {
+	// Register performance metrics
+	counter := utils.Counter{}
+	counter.StartCount()
+
+	// Init datas
 	events := make([]*model.Event, 0)
 	it := h.Realtime.Iterator()
 	for it.Next() {
@@ -330,10 +338,17 @@ func (h *History) InstantStatistics() *model.Statistic {
 		event := value.(*model.Event)
 		events = append(events, event)
 	}
-	return h.ComputeStatistics(events)
+	statistic := h.ComputeStatistics(events)
+	// Display performance metrics
+	log.Println("Generate instant statistics in", counter.StopCount().Seconds(), "s")
+	return statistic
 }
 
 func (h *History) LastHourEvents() *model.Statistic {
+	// Register performance metrics
+	counter := utils.Counter{}
+	counter.StartCount()
+
 	events := make([]*model.Event, 0)
 	it := h.Realtime.Iterator()
 	for it.Next() {
@@ -343,7 +358,11 @@ func (h *History) LastHourEvents() *model.Statistic {
 			events = append(events, event)
 		}
 	}
-	return h.ComputeStatistics(events)
+	// Display performance metrics
+	log.Println("Generate last hour statistics in", counter.StopCount().Seconds(), "s")
+
+	statistic := h.ComputeStatistics(events)
+	return statistic
 }
 
 func (h *History) YearsStatistics() []*model.Statistic {
@@ -352,6 +371,7 @@ func (h *History) YearsStatistics() []*model.Statistic {
 	for it.Next() {
 		_, value := it.Key(), it.Value()
 		event := value.(*model.Statistic)
+		event.DisplayDate = event.Date.Format("2006-01-02")
 		statistics = append(statistics, event)
 	}
 	return statistics
@@ -363,6 +383,7 @@ func (h *History) MonthsStatistics() []*model.Statistic {
 	for it.Next() {
 		_, value := it.Key(), it.Value()
 		event := value.(*model.Statistic)
+		event.DisplayDate = event.Date.Format("2006-01-02")
 		statistics = append(statistics, event)
 	}
 	return statistics

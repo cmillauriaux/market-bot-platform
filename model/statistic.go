@@ -6,14 +6,15 @@ import (
 )
 
 type Statistic struct {
-	Date     time.Time
-	DateFin  time.Time
-	Min      int
-	Max      int
-	Delta    float64
-	Value    int
-	Quantity float64
-	Partial  bool
+	Date        time.Time
+	DisplayDate string
+	DateFin     time.Time
+	Min         int
+	Max         int
+	Delta       float64
+	Value       int
+	Quantity    float64
+	Partial     bool
 }
 
 func (s *Statistic) Display() string {

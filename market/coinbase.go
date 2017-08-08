@@ -76,7 +76,7 @@ func (c *Coinbase) GetTransactions(start time.Time, end time.Time) ([]*model.Eve
 
 		for _, o := range trades {
 			if o.Time.Time().After(start) && o.Time.Time().Before(end) {
-				events = append(events, &model.Event{OrderID: strconv.FormatInt(int64(o.TradeId), 10), Date: o.Time.Time(), Quantity: o.Size, Value: int(o.Price * 100)})
+				events = append(events, &model.Event{OrderID: strconv.FormatInt(int64(o.TradeId), 10), Date: o.Time.Time(), Quantity: o.Size, Value: int(o.Price * 100), DisplayDate: o.Time.Time().Format("2006-01-02 15:04:05")})
 			} else {
 				return events, nil
 			}
@@ -115,7 +115,7 @@ func (c *Coinbase) connectToWebservice(broacastFn BroadcastEvent) {
 		}
 
 		if message.Type == "match" {
-			event := model.Event{OrderID: message.OrderId, Quantity: message.Size, Value: int(message.Price * 100), Date: message.Time.Time()}
+			event := model.Event{OrderID: message.OrderId, Quantity: message.Size, Value: int(message.Price * 100), Date: message.Time.Time(), DisplayDate: message.Time.Time().Format("2006-01-02 15:04:05")}
 			log.Println(event)
 			broacastFn(&event)
 		}
