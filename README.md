@@ -8,6 +8,9 @@ A training mode is available where your bot received a real history of the marke
 
 TODO
 
+## Where to find bitcoin history for a marketplace
+You can fin bitcoin history for each marketplace as a CSV format here : `http://api.bitcoincharts.com/v1/csv/`. Use a CSV history allow to load all of history in many seconds, whereas with the API it asks many hours.
+
 ## Implement a bot
 
 TODO

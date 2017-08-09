@@ -8,7 +8,7 @@ import (
 func main() {
 	market := market.InitMarket()
 	engine := engine.Init(market)
-	engine.LoadHistory(".krakenEUR-lite.csv")
+	engine.LoadHistory(".coinbaseEUR.csv")
 	engine.ConnectToMarket()
 	engine.LaunchSupervision()
 }

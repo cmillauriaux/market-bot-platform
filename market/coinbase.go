@@ -26,7 +26,7 @@ func InitMarket() Market {
 }
 
 func (c *Coinbase) GetStatistic(start time.Time, end time.Time) (*model.Statistic, error) {
-	params := exchange.GetHistoricRatesParams{Start: start, End: end, Granularity: 60 * 60 * 24}
+	params := exchange.GetHistoricRatesParams{Start: start, End: end, Granularity: 60 * 60}
 	rates, err := c.client.GetHistoricRates("BTC-EUR", params)
 
 	if err != nil {
@@ -41,6 +41,7 @@ func (c *Coinbase) GetStatistic(start time.Time, end time.Time) (*model.Statisti
 
 	for _, rate := range rates {
 		totalQuantity += rate.Volume
+		totalValue += int(((rate.High + rate.Low) * 100) / 2)
 		nbValues++
 		if min == 0 || int(rate.Low*100) < min {
 			min = int(rate.Low * 100)
@@ -58,6 +59,8 @@ func (c *Coinbase) GetStatistic(start time.Time, end time.Time) (*model.Statisti
 	value := 0
 	if nbValues > 0 {
 		value = totalValue / nbValues
+	} else {
+		log.Println("nbValues is 0 :", nbValues)
 	}
 
 	return &model.Statistic{Min: min, Max: max, Quantity: totalQuantity, Value: value, Delta: delta, Date: start, DateFin: end}, nil

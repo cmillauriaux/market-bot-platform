@@ -41,7 +41,7 @@
                         "graphLineAlpha": 0.5,
                         "selectedGraphFillAlpha": 0,
                         "selectedGraphLineAlpha": 1,
-                        "autoGridCount": true,
+                        "autoGridCount": false,
                         "color": "#AAAAAA"
                     },
                     "chartCursor": {

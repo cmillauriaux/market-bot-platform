@@ -49,7 +49,7 @@ func LoadHistory(filename string) (*History, error) {
 	log.Println("Load History complete in ", counter.StopCount().Seconds(), "s")
 
 	// Refresh statistics once data are loaded
-	history.RefreshStatistics()
+	history.ComputeRealTime()
 
 	return history, nil
 }

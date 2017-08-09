@@ -21,7 +21,7 @@ func Init(market market.Market) *Engine {
 }
 
 func (e *Engine) LoadHistory(fileName string) {
-	history, err := history.LoadHistory(".krakenEUR.csv")
+	history, err := history.LoadHistory(fileName)
 	if err != nil {
 		log.Fatal(err)
 	}

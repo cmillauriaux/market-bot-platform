@@ -26,27 +26,15 @@ type History struct {
 	Realtime    *treemap.Map
 	currentDate time.Time
 	Days        *treemap.Map
-	Weeks       *treemap.Map
-	Months      *treemap.Map
-	Quarters    *treemap.Map
-	Years       *treemap.Map
 }
 
 // InitHistory initialize a new history with all statistics maps ready to use
 func InitHistory() (*History, error) {
 	realtime := treemap.NewWith(god_utils.Int64Comparator)
 	Days := treemap.NewWith(god_utils.Int64Comparator)
-	Weeks := treemap.NewWith(god_utils.Int64Comparator)
-	Months := treemap.NewWith(god_utils.Int64Comparator)
-	Quarters := treemap.NewWith(god_utils.Int64Comparator)
-	Years := treemap.NewWith(god_utils.Int64Comparator)
 	return &History{
 		Realtime: realtime,
-		Days:     Days,
-		Weeks:    Weeks,
-		Months:   Months,
-		Quarters: Quarters,
-		Years:    Years}, nil
+		Days:     Days}, nil
 }
 
 // InserEvent inserts a new event in history an refresh statistics if it's relevant
@@ -82,8 +70,6 @@ func (h *History) CompleteHistory(market market.Market, step time.Duration) erro
 		time.Sleep(market.GetSleepTimeBetweenRequests())
 		currentDate = currentDate.Add(step)
 	}
-
-	h.RefreshStatistics()
 
 	log.Println("Complete History complete in ", counter.StopCount().Seconds(), "s")
 
@@ -190,78 +176,6 @@ func (h *History) ComputeAverageValue(events []*model.Event) (int, float64) {
 	return totalValue / nbValues, totalQuantity
 }
 
-func (h *History) RefreshStatistics() {
-	h.ComputeRealTime()
-	h.refreshStatistic(DAY)
-	h.refreshStatistic(WEEK)
-	h.refreshStatistic(MONTH)
-	h.refreshStatistic(QUARTER)
-	h.refreshStatistic(YEAR)
-}
-
-func (h *History) refreshStatistic(r Range) {
-	currentDate := time.Unix(0, 0)
-	lastDate := time.Unix(0, 0)
-	currentHistory := make([]*model.Statistic, 0)
-
-	it := h.Days.Iterator()
-	for it.Next() {
-		// Convert value to Statistic
-		_, value := it.Key(), it.Value()
-		statistic := value.(*model.Statistic)
-
-		// First iteration
-		if currentDate == time.Unix(0, 0) {
-			currentDate = statistic.Date.Truncate(time.Hour * 24)
-		}
-
-		// If range is complete, compute and register statistic
-		if statistic.Date.Sub(currentDate) > h.getRangeStep(r) {
-			// Register statistics
-			aggregatedStatistic := h.AggregateStatistics(currentHistory)
-			aggregatedStatistic.Date = currentDate
-			aggregatedStatistic.DateFin = statistic.DateFin
-			if aggregatedStatistic.Value > 0 {
-				h.putStatisticInHistory(aggregatedStatistic, r)
-			}
-
-			// Init list
-			currentDate = statistic.Date.Truncate(time.Hour * 24)
-			currentHistory = make([]*model.Statistic, 0)
-		}
-
-		// Add current day to list
-		currentHistory = append(currentHistory, statistic)
-		lastDate = statistic.DateFin
-	}
-	// Force partial statistics for last events
-	aggregatedStatistic := h.AggregateStatistics(currentHistory)
-	aggregatedStatistic.Date = currentDate
-	aggregatedStatistic.DateFin = lastDate
-	aggregatedStatistic.Partial = true
-	h.putStatisticInHistory(aggregatedStatistic, r)
-}
-
-func (h *History) putStatisticInHistory(statistic *model.Statistic, r Range) {
-	switch r {
-	case YEAR:
-		h.Years.Put(statistic.Date.UnixNano(), statistic)
-		break
-	case QUARTER:
-		h.Quarters.Put(statistic.Date.UnixNano(), statistic)
-		break
-	case MONTH:
-		h.Months.Put(statistic.Date.UnixNano(), statistic)
-		break
-	case WEEK:
-		h.Weeks.Put(statistic.Date.UnixNano(), statistic)
-		break
-	case DAY:
-		// Do nothing : statistics are already aggregated by days
-		break
-	}
-}
-
 func (h *History) ComputeStatistics(events []*model.Event) *model.Statistic {
 	totalQuantity := 0.0
 	totalValue := 0
@@ -322,69 +236,4 @@ func (h *History) AggregateStatistics(events []*model.Statistic) *model.Statisti
 	}
 
 	return &model.Statistic{Min: min, Max: max, Quantity: totalQuantity, Value: value, Delta: delta}
-}
-
-// Méthode pour la vue
-func (h *History) InstantStatistics() *model.Statistic {
-	// Register performance metrics
-	counter := utils.Counter{}
-	counter.StartCount()
-
-	// Init datas
-	events := make([]*model.Event, 0)
-	it := h.Realtime.Iterator()
-	for it.Next() {
-		_, value := it.Key(), it.Value()
-		event := value.(*model.Event)
-		events = append(events, event)
-	}
-	statistic := h.ComputeStatistics(events)
-	// Display performance metrics
-	log.Println("Generate instant statistics in", counter.StopCount().Seconds(), "s")
-	return statistic
-}
-
-func (h *History) LastHourEvents() *model.Statistic {
-	// Register performance metrics
-	counter := utils.Counter{}
-	counter.StartCount()
-
-	events := make([]*model.Event, 0)
-	it := h.Realtime.Iterator()
-	for it.Next() {
-		_, value := it.Key(), it.Value()
-		event := value.(*model.Event)
-		if event.Date.After(time.Now().Add(-time.Hour)) {
-			events = append(events, event)
-		}
-	}
-	// Display performance metrics
-	log.Println("Generate last hour statistics in", counter.StopCount().Seconds(), "s")
-
-	statistic := h.ComputeStatistics(events)
-	return statistic
-}
-
-func (h *History) YearsStatistics() []*model.Statistic {
-	statistics := make([]*model.Statistic, 0)
-	it := h.Years.Iterator()
-	for it.Next() {
-		_, value := it.Key(), it.Value()
-		event := value.(*model.Statistic)
-		event.DisplayDate = event.Date.Format("2006-01-02")
-		statistics = append(statistics, event)
-	}
-	return statistics
-}
-
-func (h *History) MonthsStatistics() []*model.Statistic {
-	statistics := make([]*model.Statistic, 0)
-	it := h.Months.Iterator()
-	for it.Next() {
-		_, value := it.Key(), it.Value()
-		event := value.(*model.Statistic)
-		event.DisplayDate = event.Date.Format("2006-01-02")
-		statistics = append(statistics, event)
-	}
-	return statistics
 }
