@@ -182,16 +182,22 @@ func (h *History) ComputeStatistics(events []*model.Event) *model.Statistic {
 	nbValues := 0
 	min := 0
 	max := 0
+	open := 0
+	close := 0
 	for _, event := range events {
 		totalQuantity += event.Quantity
 		totalValue += event.Value
 		nbValues++
+		if min == 0 {
+			open = event.Value
+		}
 		if min == 0 || event.Value < min {
 			min = event.Value
 		}
 		if max == 0 || event.Value > max {
 			max = event.Value
 		}
+		close = event.Value
 	}
 
 	delta := 0.0
@@ -204,7 +210,7 @@ func (h *History) ComputeStatistics(events []*model.Event) *model.Statistic {
 		value = totalValue / nbValues
 	}
 
-	return &model.Statistic{Min: min, Max: max, Quantity: totalQuantity, Value: value, Delta: delta}
+	return &model.Statistic{Min: min, Max: max, Quantity: totalQuantity, Value: value, Delta: delta, Open: open, Close: close}
 }
 
 func (h *History) AggregateStatistics(events []*model.Statistic) *model.Statistic {
@@ -213,16 +219,22 @@ func (h *History) AggregateStatistics(events []*model.Statistic) *model.Statisti
 	nbValues := 0
 	min := 0
 	max := 0
+	open := 0
+	close := 0
 	for _, event := range events {
 		totalQuantity += event.Quantity
 		totalValue += event.Value
 		nbValues++
+		if min == 0 {
+			open = event.Value
+		}
 		if min == 0 || event.Value < min {
 			min = event.Value
 		}
 		if max == 0 || event.Value > max {
 			max = event.Value
 		}
+		close = event.Value
 	}
 
 	delta := 0.0
@@ -235,5 +247,5 @@ func (h *History) AggregateStatistics(events []*model.Statistic) *model.Statisti
 		value = totalValue / nbValues
 	}
 
-	return &model.Statistic{Min: min, Max: max, Quantity: totalQuantity, Value: value, Delta: delta}
+	return &model.Statistic{Min: min, Max: max, Quantity: totalQuantity, Value: value, Delta: delta, Open: open, Close: close}
 }

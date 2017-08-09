@@ -38,17 +38,23 @@ func (c *Coinbase) GetStatistic(start time.Time, end time.Time) (*model.Statisti
 	nbValues := 0
 	min := 0
 	max := 0
+	open := 0
+	close := 0
 
 	for _, rate := range rates {
 		totalQuantity += rate.Volume
 		totalValue += int(((rate.High + rate.Low) * 100) / 2)
 		nbValues++
+		if min == 0 {
+			open = int(rate.Open * 100)
+		}
 		if min == 0 || int(rate.Low*100) < min {
 			min = int(rate.Low * 100)
 		}
 		if max == 0 || int(rate.High*100) > max {
 			max = int(rate.High * 100)
 		}
+		close = int(rate.Close * 100)
 	}
 
 	delta := 0.0
@@ -63,7 +69,7 @@ func (c *Coinbase) GetStatistic(start time.Time, end time.Time) (*model.Statisti
 		log.Println("nbValues is 0 :", nbValues)
 	}
 
-	return &model.Statistic{Min: min, Max: max, Quantity: totalQuantity, Value: value, Delta: delta, Date: start, DateFin: end}, nil
+	return &model.Statistic{Min: min, Max: max, Quantity: totalQuantity, Value: value, Delta: delta, Date: start, DateFin: end, Open: open, Close: close}, nil
 }
 
 func (c *Coinbase) GetTransactions(start time.Time, end time.Time) ([]*model.Event, error) {

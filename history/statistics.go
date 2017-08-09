@@ -50,20 +50,20 @@ func (h *History) LastHourEvents() *model.Statistic {
 	return statistic
 }
 
-func (h *History) YearsStatistics() []*model.Statistic {
-	return h.getStatistics(YEAR, true, time.Unix(0, 0), time.Unix(0, 0))
+func (h *History) YearsStatistics() *model.Statistics {
+	return h.MakeStatistics(h.getStatistics(YEAR, true, time.Unix(0, 0), time.Unix(0, 0)))
 }
 
-func (h *History) MonthsStatistics() []*model.Statistic {
-	return h.getStatistics(MONTH, true, time.Unix(0, 0), time.Unix(0, 0))
+func (h *History) MonthsStatistics() *model.Statistics {
+	return h.MakeStatistics(h.getStatistics(MONTH, true, time.Unix(0, 0), time.Unix(0, 0)))
 }
 
-func (h *History) WeeksStatistics() []*model.Statistic {
-	return h.getStatistics(WEEK, true, time.Unix(0, 0), time.Unix(0, 0))
+func (h *History) WeeksStatistics() *model.Statistics {
+	return h.MakeStatistics(h.getStatistics(WEEK, true, time.Unix(0, 0), time.Unix(0, 0)))
 }
 
-func (h *History) Last30DaysStatistics() []*model.Statistic {
-	return h.getStatistics(DAY, true, time.Now().Add(-time.Hour*24*30).Truncate(time.Hour*24), time.Now())
+func (h *History) Last30DaysStatistics() *model.Statistics {
+	return h.MakeStatistics(h.getStatistics(DAY, true, time.Now().Add(-time.Hour*24*30).Truncate(time.Hour*24), time.Now()))
 }
 
 func (h *History) getStatistics(r Range, slicing bool, start time.Time, end time.Time) []*model.Statistic {
@@ -185,4 +185,8 @@ func (h *History) isANewPeriod(beginDate time.Time, currentDate time.Time, r Ran
 	}
 
 	return false
+}
+
+func (h *History) MakeStatistics(stats []*model.Statistic) *model.Statistics {
+	return &model.Statistics{Details: stats, Summary: h.AggregateStatistics(stats)}
 }

@@ -94,7 +94,7 @@
                     },
                     "dataProvider": 
                     [
-                        {{range .YearsStatistics}}
+                        {{range .YearsStatistics.Details}}
                         {
                             "date": "{{.DisplayDate}}",
                             "value": {{.Value}} / 100
@@ -192,7 +192,7 @@
                     },
                     "dataProvider": 
                     [
-                        {{range .MonthsStatistics}}
+                        {{range .MonthsStatistics.Details}}
                         {
                             "date": "{{.DisplayDate}}",
                             "value": {{.Value}} / 100
@@ -290,7 +290,7 @@
                     },
                     "dataProvider": 
                     [
-                        {{range .WeeksStatistics}}
+                        {{range .WeeksStatistics.Details}}
                         {
                             "date": "{{.DisplayDate}}",
                             "value": {{.Value}} / 100

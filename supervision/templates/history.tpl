@@ -15,6 +15,30 @@
         <div>
             <h1>Last statistics</h1>
             <h2>30 days statistics</h2>
+            {{with .Last30DaysStatistics}}
+                <table>
+                    <tr>
+                        <td>Open</td>
+                        <td>{{.Summary.Open}}</td>
+                    </tr>
+                    <tr>
+                        <td>Close</td>
+                        <td>{{.Summary.Close}}</td>
+                    </tr>
+                    <tr>
+                        <td>Min</td>
+                        <td>{{.Summary.Min}}</td>
+                    </tr>
+                    <tr>
+                        <td>Max</td>
+                        <td>{{.Summary.Max}}</td>
+                    </tr>
+                    <tr>
+                        <td>Average</td>
+                        <td>{{.Summary.Value}}</td>
+                    </tr>
+                </table>
+            {{end}}
             <div id="chart30Days" style="width: 100%; height: 700px;"></div>
             <script>
                 var chart = AmCharts.makeChart("chart30Days", {
@@ -94,7 +118,7 @@
                     },
                     "dataProvider": 
                     [
-                        {{range .Last30DaysStatistics}}
+                        {{range .Last30DaysStatistics.Details}}
                         {
                             "date": "{{.DisplayDate}}",
                             "value": {{.Value}} / 100

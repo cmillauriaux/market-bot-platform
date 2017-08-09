@@ -11,6 +11,8 @@ type Statistic struct {
 	DateFin     time.Time
 	Min         int
 	Max         int
+	Open        int
+	Close       int
 	Delta       float64
 	Value       int
 	Quantity    float64

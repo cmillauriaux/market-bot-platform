@@ -29,6 +29,14 @@
                     <td>{{.Max}}</td>
                 </tr>
                 <tr>
+                    <td>Open</td>
+                    <td>{{.Open}}</td>
+                </tr>
+                <tr>
+                    <td>Close</td>
+                    <td>{{.Close}}</td>
+                </tr>
+                <tr>
                     <td>Avg value</td>
                     <td>{{.Value}}</td>
                 </tr>
@@ -52,6 +60,14 @@
                 <tr>
                     <td>Max value</td>
                     <td>{{.Max}}</td>
+                </tr>
+                <tr>
+                    <td>Open</td>
+                    <td>{{.Open}}</td>
+                </tr>
+                <tr>
+                    <td>Close</td>
+                    <td>{{.Close}}</td>
                 </tr>
                 <tr>
                     <td>Avg value</td>
