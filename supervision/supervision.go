@@ -7,9 +7,19 @@ import (
 
 func RunServer(history *history.History) {
 	app := neo.App()
+	// Compile templates
 	app.Templates(
 		"./supervision/templates/*",
 	)
+
+	// Serve static files
+	app.Serve("/bootstrap", "./supervision/templates/bootstrap")
+	app.Serve("/css", "./supervision/templates/css")
+	app.Serve("/js", "./supervision/templates/js")
+	app.Serve("/less", "./supervision/templates/less")
+	app.Serve("/plugins", "./supervision/templates/plugins")
+
+	// Serve pages
 	app.Get("/", func(ctx *neo.Ctx) (int, error) {
 		return 200, ctx.Res.Tpl("index", history)
 	})

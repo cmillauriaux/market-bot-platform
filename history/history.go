@@ -20,6 +20,12 @@ const (
 	MONTH
 	WEEK
 	DAY
+	SIX_HOURS
+	THREE_HOURS
+	HOUR
+	FITEEN_MINUTES
+	FIVE_MINUTES
+	MINUTE
 )
 
 type History struct {
@@ -29,12 +35,12 @@ type History struct {
 }
 
 // InitHistory initialize a new history with all statistics maps ready to use
-func InitHistory() (*History, error) {
+func InitHistory() *History {
 	realtime := treemap.NewWith(god_utils.Int64Comparator)
 	Days := treemap.NewWith(god_utils.Int64Comparator)
 	return &History{
 		Realtime: realtime,
-		Days:     Days}, nil
+		Days:     Days}
 }
 
 // InserEvent inserts a new event in history an refresh statistics if it's relevant
@@ -201,16 +207,21 @@ func (h *History) ComputeStatistics(events []*model.Event) *model.Statistic {
 	}
 
 	delta := 0.0
-	if min > 0 {
+	if min > 0 && max > 0 {
 		delta = (float64(max-min) / float64(min) * 100)
 	}
 
 	value := 0
-	if nbValues > 0 {
+	if nbValues > 0 && totalValue > 0 {
 		value = totalValue / nbValues
 	}
 
-	return &model.Statistic{Min: min, Max: max, Quantity: totalQuantity, Value: value, Delta: delta, Open: open, Close: close}
+	upward := false
+	if close > open {
+		upward = true
+	}
+
+	return &model.Statistic{Min: min, Max: max, Quantity: totalQuantity, Value: value, Delta: delta, Open: open, Close: close, UpwardVariation: upward}
 }
 
 func (h *History) AggregateStatistics(events []*model.Statistic) *model.Statistic {
@@ -238,14 +249,19 @@ func (h *History) AggregateStatistics(events []*model.Statistic) *model.Statisti
 	}
 
 	delta := 0.0
-	if min > 0 {
+	if max > 0 && min > 0 {
 		delta = (float64(max-min) / float64(min) * 100)
 	}
 
 	value := 0
-	if nbValues > 0 {
+	if nbValues > 0 && totalValue > 0 {
 		value = totalValue / nbValues
 	}
 
-	return &model.Statistic{Min: min, Max: max, Quantity: totalQuantity, Value: value, Delta: delta, Open: open, Close: close}
+	upward := false
+	if close > open {
+		upward = true
+	}
+
+	return &model.Statistic{Min: min, Max: max, Quantity: totalQuantity, Value: value, Delta: delta, Open: open, Close: close, UpwardVariation: upward}
 }

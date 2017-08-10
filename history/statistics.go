@@ -5,49 +5,24 @@ import (
 	"time"
 
 	"github.com/cmillauriaux/market-bot-platform/model"
-	"github.com/cmillauriaux/market-bot-platform/utils"
 	"github.com/jinzhu/now"
 )
 
 // Méthode pour la vue
 func (h *History) InstantStatistics() *model.Statistic {
-	// Register performance metrics
-	counter := utils.Counter{}
-	counter.StartCount()
-
-	// Init datas
-	events := make([]*model.Event, 0)
-	it := h.Realtime.Iterator()
-	for it.Next() {
-		_, value := it.Key(), it.Value()
-		event := value.(*model.Event)
-		events = append(events, event)
-	}
-	statistic := h.ComputeStatistics(events)
-	// Display performance metrics
-	log.Println("Generate instant statistics in", counter.StopCount().Seconds(), "s")
-	return statistic
+	return h.AggregateStatistics(h.getStatisticsFromEvents(MINUTE, true, time.Now().Add(-time.Hour*24), time.Now()))
 }
 
 func (h *History) LastHourEvents() *model.Statistic {
-	// Register performance metrics
-	counter := utils.Counter{}
-	counter.StartCount()
+	return h.AggregateStatistics(h.getStatisticsFromEvents(MINUTE, true, time.Now().Add(-time.Hour), time.Now()))
+}
 
-	events := make([]*model.Event, 0)
-	it := h.Realtime.Iterator()
-	for it.Next() {
-		_, value := it.Key(), it.Value()
-		event := value.(*model.Event)
-		if event.Date.After(time.Now().Add(-time.Hour)) {
-			events = append(events, event)
-		}
-	}
-	// Display performance metrics
-	log.Println("Generate last hour statistics in", counter.StopCount().Seconds(), "s")
+func (h *History) LastHourStatistics() *model.Statistics {
+	return h.MakeStatistics(h.getStatisticsFromEvents(MINUTE, true, time.Now().Add(-time.Hour), time.Now()))
+}
 
-	statistic := h.ComputeStatistics(events)
-	return statistic
+func (h *History) LastSixHoursStatistics() *model.Statistics {
+	return h.MakeStatistics(h.getStatisticsFromEvents(FITEEN_MINUTES, true, time.Now().Add(-time.Hour*6), time.Now()))
 }
 
 func (h *History) YearsStatistics() *model.Statistics {
@@ -66,15 +41,14 @@ func (h *History) Last30DaysStatistics() *model.Statistics {
 	return h.MakeStatistics(h.getStatistics(DAY, true, time.Now().Add(-time.Hour*24*30).Truncate(time.Hour*24), time.Now()))
 }
 
-func (h *History) getStatistics(r Range, slicing bool, start time.Time, end time.Time) []*model.Statistic {
+func (h *History) getStatisticsFromEvents(r Range, slicing bool, start time.Time, end time.Time) []*model.Statistic {
 	statistics := make([]*model.Statistic, 0)
-	currentHistory := make([]*model.Statistic, 0)
+	currentHistory := make([]*model.Event, 0)
 	beginDate := time.Unix(0, 0)
-	it := h.Days.Iterator()
+	it := h.Realtime.Iterator()
 	for it.Next() {
 		_, value := it.Key(), it.Value()
-		event := value.(*model.Statistic)
-		event.DisplayDate = event.Date.Format("2006-01-02")
+		event := value.(*model.Event)
 
 		if (!start.Equal(time.Unix(0, 0)) && event.Date.Before(start)) || (!end.Equal(time.Unix(0, 0)) && event.Date.After(end)) {
 			continue
@@ -85,7 +59,68 @@ func (h *History) getStatistics(r Range, slicing bool, start time.Time, end time
 		}
 
 		// If day is different, compute statistics for the day and purge realtime
-		if h.isANewPeriod(beginDate, event.Date, r, false) {
+		if h.isANewPeriod(beginDate, event.Date, r, slicing) {
+			// Compute and register statistics for the day
+			statistic := h.ComputeStatistics(currentHistory)
+			statistic.Date = beginDate
+			statistic.DateFin = event.Date
+			if r == MINUTE || r == FIVE_MINUTES || r == FITEEN_MINUTES || r == HOUR || r == THREE_HOURS || r == SIX_HOURS {
+				statistic.DisplayDate = event.Date.Format("2006-01-02 15:04:05")
+			} else {
+				statistic.DisplayDate = event.Date.Format("2006-01-02")
+			}
+
+			if statistic.Value > 0 {
+				statistics = append(statistics, statistic)
+			}
+
+			// Init list
+			beginDate = event.Date
+			currentHistory = make([]*model.Event, 0)
+
+			// Remove from begin to current
+			h.removeRealTimeUntil(h.currentDate)
+		}
+
+		// Add current day to list
+		currentHistory = append(currentHistory, event)
+	}
+
+	// Current period
+	statistic := h.ComputeStatistics(currentHistory)
+	statistic.Date = beginDate
+	statistic.DateFin = time.Now()
+	if r == MINUTE || r == FIVE_MINUTES || r == FITEEN_MINUTES || r == HOUR || r == THREE_HOURS || r == SIX_HOURS {
+		statistic.DisplayDate = statistic.Date.Format("2006-01-02 15:04:05")
+	} else {
+		statistic.DisplayDate = statistic.Date.Format("2006-01-02")
+	}
+	statistic.Partial = true
+	statistics = append(statistics, statistic)
+
+	// Return statistics
+	return statistics
+}
+
+func (h *History) getStatistics(r Range, slicing bool, start time.Time, end time.Time) []*model.Statistic {
+	statistics := make([]*model.Statistic, 0)
+	currentHistory := make([]*model.Statistic, 0)
+	beginDate := time.Unix(0, 0)
+	it := h.Days.Iterator()
+	for it.Next() {
+		_, value := it.Key(), it.Value()
+		event := value.(*model.Statistic)
+
+		if (!start.Equal(time.Unix(0, 0)) && event.Date.Before(start)) || (!end.Equal(time.Unix(0, 0)) && event.Date.After(end)) {
+			continue
+		}
+		// First event ever read : initialize the oldest event timestamp
+		if beginDate == time.Unix(0, 0) {
+			beginDate = event.Date.Truncate(time.Hour * 24)
+		}
+
+		// If day is different, compute statistics for the day and purge realtime
+		if h.isANewPeriod(beginDate, event.Date, r, slicing) {
 			// Compute and register statistics for the day
 			statistic := h.AggregateStatistics(currentHistory)
 			statistic.Date = beginDate
@@ -153,6 +188,8 @@ func (h *History) isANewPeriod(beginDate time.Time, currentDate time.Time, r Ran
 			return false
 		}
 	} else {
+		log.Println("BEGIN : ", beginDate)
+		log.Println("CURRENT : ", currentDate)
 		switch r {
 		case YEAR:
 			if currentDate.After(beginDate.Add(time.Hour * 24 * 365)) {
@@ -176,6 +213,36 @@ func (h *History) isANewPeriod(beginDate time.Time, currentDate time.Time, r Ran
 			break
 		case DAY:
 			if currentDate.After(beginDate.Add(time.Hour * 24)) {
+				return true
+			}
+			break
+		case SIX_HOURS:
+			if currentDate.After(beginDate.Add(time.Hour * 6)) {
+				return true
+			}
+			break
+		case THREE_HOURS:
+			if currentDate.After(beginDate.Add(time.Hour * 3)) {
+				return true
+			}
+			break
+		case HOUR:
+			if currentDate.After(beginDate.Add(time.Hour)) {
+				return true
+			}
+			break
+		case FITEEN_MINUTES:
+			if currentDate.After(beginDate.Add(time.Minute * 15)) {
+				return true
+			}
+			break
+		case FIVE_MINUTES:
+			if currentDate.After(beginDate.Add(time.Minute * 5)) {
+				return true
+			}
+			break
+		case MINUTE:
+			if currentDate.After(beginDate.Add(time.Minute)) {
 				return true
 			}
 			break

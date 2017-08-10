@@ -69,7 +69,12 @@ func (c *Coinbase) GetStatistic(start time.Time, end time.Time) (*model.Statisti
 		log.Println("nbValues is 0 :", nbValues)
 	}
 
-	return &model.Statistic{Min: min, Max: max, Quantity: totalQuantity, Value: value, Delta: delta, Date: start, DateFin: end, Open: open, Close: close}, nil
+	upward := false
+	if close > open {
+		upward = true
+	}
+
+	return &model.Statistic{Min: min, Max: max, Quantity: totalQuantity, Value: value, Delta: delta, Date: start, DateFin: end, Open: open, Close: close, UpwardVariation: upward}, nil
 }
 
 func (c *Coinbase) GetTransactions(start time.Time, end time.Time) ([]*model.Event, error) {

@@ -17,10 +17,7 @@ func LoadHistory(filename string) (*History, error) {
 	channel := make(chan model.Event)
 
 	// Init a new history
-	history, err := InitHistory()
-	if err != nil {
-		return nil, err
-	}
+	history := InitHistory()
 
 	// Launch CSV Reader
 	go func() {
@@ -37,7 +34,7 @@ func LoadHistory(filename string) (*History, error) {
 				transaction_closed = true
 			} else {
 				// Insert a new event in history
-				err = history.InsertEvent(&event)
+				err := history.InsertEvent(&event)
 				if err != nil {
 					return nil, err
 				}

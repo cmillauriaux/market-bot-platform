@@ -15,8 +15,7 @@ type Engine struct {
 }
 
 func Init(market market.Market) *Engine {
-	engine := &Engine{market: market}
-
+	engine := &Engine{market: market, History: history.InitHistory()}
 	return engine
 }
 

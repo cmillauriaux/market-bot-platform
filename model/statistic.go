@@ -6,17 +6,18 @@ import (
 )
 
 type Statistic struct {
-	Date        time.Time
-	DisplayDate string
-	DateFin     time.Time
-	Min         int
-	Max         int
-	Open        int
-	Close       int
-	Delta       float64
-	Value       int
-	Quantity    float64
-	Partial     bool
+	Date            time.Time
+	DisplayDate     string
+	DateFin         time.Time
+	Min             int
+	Max             int
+	Open            int
+	Close           int
+	Delta           float64
+	Value           int
+	Quantity        float64
+	Partial         bool
+	UpwardVariation bool
 }
 
 func (s *Statistic) Display() string {
