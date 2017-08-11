@@ -1,7 +1,6 @@
 package history
 
 import (
-	"log"
 	"time"
 
 	"github.com/cmillauriaux/market-bot-platform/model"
@@ -25,6 +24,10 @@ func (h *History) LastSixHoursStatistics() *model.Statistics {
 	return h.MakeStatistics(h.getStatisticsFromEvents(FITEEN_MINUTES, true, time.Now().Add(-time.Hour*6), time.Now()))
 }
 
+func (h *History) LastDayStatistics() *model.Statistics {
+	return h.MakeStatistics(h.getStatisticsFromEvents(HOUR, true, time.Now().Add(-time.Hour*24), time.Now()))
+}
+
 func (h *History) YearsStatistics() *model.Statistics {
 	return h.MakeStatistics(h.getStatistics(YEAR, true, time.Unix(0, 0), time.Unix(0, 0)))
 }
@@ -39,6 +42,10 @@ func (h *History) WeeksStatistics() *model.Statistics {
 
 func (h *History) Last30DaysStatistics() *model.Statistics {
 	return h.MakeStatistics(h.getStatistics(DAY, true, time.Now().Add(-time.Hour*24*30).Truncate(time.Hour*24), time.Now()))
+}
+
+func (h *History) Last7DaysStatistics() *model.Statistics {
+	return h.MakeStatistics(h.getStatistics(HOUR, true, time.Now().Add(-time.Hour*24*7).Truncate(time.Hour*24), time.Now()))
 }
 
 func (h *History) getStatisticsFromEvents(r Range, slicing bool, start time.Time, end time.Time) []*model.Statistic {
@@ -125,7 +132,11 @@ func (h *History) getStatistics(r Range, slicing bool, start time.Time, end time
 			statistic := h.AggregateStatistics(currentHistory)
 			statistic.Date = beginDate
 			statistic.DateFin = event.Date
-			statistic.DisplayDate = event.Date.Format("2006-01-02")
+			if r == MINUTE || r == FIVE_MINUTES || r == FITEEN_MINUTES || r == HOUR || r == THREE_HOURS || r == SIX_HOURS {
+		statistic.DisplayDate = statistic.Date.Format("2006-01-02 15:04:05")
+	} else {
+		statistic.DisplayDate = statistic.Date.Format("2006-01-02")
+	}
 			if statistic.Value > 0 {
 				statistics = append(statistics, statistic)
 			}
@@ -146,7 +157,11 @@ func (h *History) getStatistics(r Range, slicing bool, start time.Time, end time
 	statistic := h.AggregateStatistics(currentHistory)
 	statistic.Date = beginDate
 	statistic.DateFin = time.Now()
-	statistic.DisplayDate = statistic.DateFin.Format("2006-01-02")
+	if r == MINUTE || r == FIVE_MINUTES || r == FITEEN_MINUTES || r == HOUR || r == THREE_HOURS || r == SIX_HOURS {
+		statistic.DisplayDate = statistic.Date.Format("2006-01-02 15:04:05")
+	} else {
+		statistic.DisplayDate = statistic.Date.Format("2006-01-02")
+	}
 	statistic.Partial = true
 	statistics = append(statistics, statistic)
 
@@ -188,8 +203,6 @@ func (h *History) isANewPeriod(beginDate time.Time, currentDate time.Time, r Ran
 			return false
 		}
 	} else {
-		log.Println("BEGIN : ", beginDate)
-		log.Println("CURRENT : ", currentDate)
 		switch r {
 		case YEAR:
 			if currentDate.After(beginDate.Add(time.Hour * 24 * 365)) {

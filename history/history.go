@@ -85,7 +85,7 @@ func (h *History) CompleteHistory(market market.Market, step time.Duration) erro
 func (h *History) GetRealtimeInformations(market market.Market) error {
 	counter := utils.Counter{}
 	counter.StartCount()
-	events, err := market.GetTransactions(time.Now().Truncate(time.Hour*24), time.Now())
+	events, err := market.GetTransactions(time.Now().Add(-time.Hour*24).Truncate(time.Hour*24), time.Now())
 	if err != nil {
 		return err
 	}
@@ -132,7 +132,9 @@ func (h *History) ComputeRealTime() {
 		}
 
 		// Add current day to list
-		currentHistory = append(currentHistory, event)
+		if !event.Date.Before(h.currentDate) {
+			currentHistory = append(currentHistory, event)
+		}
 	}
 }
 
@@ -144,7 +146,7 @@ func (h *History) removeRealTimeUntil(date time.Time) {
 		event := value.(*model.Event)
 
 		// If event is before the param date, remove it
-		if event.Date.Before(date) {
+		if event.Date.Before(date.Add(-time.Hour * 24)) {
 			h.Realtime.Remove(key)
 		}
 	}
