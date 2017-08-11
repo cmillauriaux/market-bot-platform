@@ -21,7 +21,10 @@ func LoadHistory(filename string) (*History, error) {
 
 	// Launch CSV Reader
 	go func() {
-		utils.ReadCsv(filename, channel, 0)
+		err := utils.ReadCsv(filename, channel, 0)
+		if err != nil {
+			log.Fatal(err)
+		}
 	}()
 
 	// Loop while there is lines to read in CSV
