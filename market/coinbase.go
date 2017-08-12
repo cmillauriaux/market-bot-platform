@@ -58,8 +58,12 @@ func (c *Coinbase) GetStatistic(start time.Time, end time.Time) (*model.Statisti
 	}
 
 	delta := 0.0
-	if min > 0 {
-		delta = (float64(max-min) / float64(min) * 100)
+	if open > 0 && close > 0 {
+		if close > open {
+			delta = (float64(close-open) / float64(close) * 100)
+		} else {
+			delta = (float64(open-close) / float64(open) * 100)
+		}
 	}
 
 	value := 0

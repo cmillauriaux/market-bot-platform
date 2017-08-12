@@ -44,7 +44,7 @@ func (c *TrainingClient) SimulateMarketTransaction(event *model.Event) {
 }
 
 func (c *TrainingClient) CancelOrder(orderId string) {
-
+	delete(c.orders, orderId)
 }
 
 func (c *TrainingClient) MakeBuyOrder(size float64, value int, callback func(*model.Event, *model.Order)) *model.Order {

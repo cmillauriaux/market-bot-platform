@@ -16,6 +16,14 @@ func (h *History) LastHourEvents() *model.Statistic {
 	return h.AggregateStatistics(h.getStatisticsFromEvents(MINUTE, true, time.Now().Add(-time.Hour), time.Now()))
 }
 
+func (h *History) GetLastHourEvents(date time.Time) *model.Statistic {
+	return h.AggregateStatistics(h.getStatisticsFromEvents(MINUTE, true, date.Add(-time.Hour), date))
+}
+
+func (h *History) GetPreviousHourEvents(date time.Time) *model.Statistic {
+	return h.AggregateStatistics(h.getStatisticsFromEvents(MINUTE, true, date.Add(-time.Hour*2), date.Add(-time.Hour)))
+}
+
 func (h *History) LastHourStatistics() *model.Statistics {
 	return h.MakeStatistics(h.getStatisticsFromEvents(MINUTE, true, time.Now().Add(-time.Hour), time.Now()))
 }
@@ -133,10 +141,10 @@ func (h *History) getStatistics(r Range, slicing bool, start time.Time, end time
 			statistic.Date = beginDate
 			statistic.DateFin = event.Date
 			if r == MINUTE || r == FIVE_MINUTES || r == FITEEN_MINUTES || r == HOUR || r == THREE_HOURS || r == SIX_HOURS {
-		statistic.DisplayDate = statistic.Date.Format("2006-01-02 15:04:05")
-	} else {
-		statistic.DisplayDate = statistic.Date.Format("2006-01-02")
-	}
+				statistic.DisplayDate = statistic.Date.Format("2006-01-02 15:04:05")
+			} else {
+				statistic.DisplayDate = statistic.Date.Format("2006-01-02")
+			}
 			if statistic.Value > 0 {
 				statistics = append(statistics, statistic)
 			}

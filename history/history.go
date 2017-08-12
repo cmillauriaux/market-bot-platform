@@ -209,8 +209,12 @@ func (h *History) ComputeStatistics(events []*model.Event) *model.Statistic {
 	}
 
 	delta := 0.0
-	if min > 0 && max > 0 {
-		delta = (float64(max-min) / float64(min) * 100)
+	if open > 0 && close > 0 {
+		if close > open {
+			delta = (float64(close-open) / float64(close) * 100)
+		} else {
+			delta = (float64(open-close) / float64(open) * 100)
+		}
 	}
 
 	value := 0
@@ -251,8 +255,12 @@ func (h *History) AggregateStatistics(events []*model.Statistic) *model.Statisti
 	}
 
 	delta := 0.0
-	if max > 0 && min > 0 {
-		delta = (float64(max-min) / float64(min) * 100)
+	if open > 0 && close > 0 {
+		if close > open {
+			delta = (float64(close-open) / float64(close) * 100)
+		} else {
+			delta = (float64(open-close) / float64(open) * 100)
+		}
 	}
 
 	value := 0

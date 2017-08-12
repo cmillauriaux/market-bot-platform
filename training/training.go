@@ -6,6 +6,7 @@ import (
 
 	"github.com/cmillauriaux/market-bot-platform/bots"
 	"github.com/cmillauriaux/market-bot-platform/engine"
+	"github.com/cmillauriaux/market-bot-platform/history"
 	"github.com/cmillauriaux/market-bot-platform/market"
 	"github.com/cmillauriaux/market-bot-platform/model"
 	"github.com/cmillauriaux/market-bot-platform/utils"
@@ -26,20 +27,20 @@ func main() {
 	engine.LoadHistory("../.coinbaseEUR.csv", end)
 	log.Println("History loaded")
 	log.Println("Begining training...")
-	launchSimulation("../.coinbaseEUR.csv", end, engine.Bots)
+	launchSimulation("../.coinbaseEUR.csv", end, engine.Bots, engine.History, market)
 	log.Println("End of training")
 	//engine.LaunchSupervision()
 }
 
 func loadBots(market market.Market) []bots.Bot {
 	b := make([]bots.Bot, 0)
-	bot := &bots.BotV1{}
-	bot.Init(market, 100)
+	bot := &bots.BotV1{MinimumGapToBuy: 100, MaximumQuantityToBuy: 0.01, MinimumQuantityToBuy: 0.01}
+	bot.Init(market, 10000)
 	b = append(b, bot)
 	return b
 }
 
-func launchSimulation(filename string, start time.Time, bots []bots.Bot) {
+func launchSimulation(filename string, start time.Time, bots []bots.Bot, history *history.History, market market.Market) {
 	// Counter to measure performances
 	counter := utils.Counter{}
 	counter.StartCount()
@@ -66,8 +67,10 @@ func launchSimulation(filename string, start time.Time, bots []bots.Bot) {
 			} else {
 				// Insert a new event in history
 				if event.Date.After(start) {
+					market.SimulateMarketTransaction(&event)
+					history.InsertEvent(&event)
 					for _, bot := range bots {
-						bot.Update(&event, event.Date)
+						bot.Update(history, &event, event.Date)
 					}
 				}
 			}

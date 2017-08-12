@@ -9,12 +9,12 @@ import (
 )
 
 type BotBase struct {
-	ID            string
-	client        market.Market
-	Transactions  map[string]*model.Event `json:"-"`
-	Orders        map[string]*model.Order `json:"-"`
-	ReverseOrders map[string]*model.Order `json:"-"`
-	//History      map[string]*core.Transaction `json:"-"`
+	ID             string
+	client         market.Market
+	Transactions   map[string]*model.Event `json:"-"`
+	Orders         map[string]*model.Order `json:"-"`
+	ReverseOrders  map[string]*model.Order `json:"-"`
+	History        map[string]*model.Event `json:"-"`
 	NbTransactions int
 	Wallet         int
 }
@@ -26,7 +26,7 @@ func (b *BotBase) Init(client market.Market, wallet int) {
 	b.Transactions = make(map[string]*model.Event)
 	b.Orders = make(map[string]*model.Order)
 	b.ReverseOrders = make(map[string]*model.Order)
-	//b.History = make(map[string]*core.Transaction)
+	b.History = make(map[string]*model.Event)
 }
 
 func (b *BotBase) BuySuccess(transaction *model.Event, order *model.Order) {
@@ -40,12 +40,12 @@ func (b *BotBase) BuySuccess(transaction *model.Event, order *model.Order) {
 
 	// Substract from Wallet
 	b.Wallet -= int(b.Transactions[transaction.OrderID].Quantity * float64(b.Transactions[transaction.OrderID].Value))
-	//log.Println("BUY SUCCESS [", b.ID, ":", order.OrderID, "] : Order [", order.Value, "] Tx [", transaction.Value, "] Qty [", b.Transactions[transaction.OrderID].Quantity, "] VAL [", float64(b.Transactions[transaction.OrderID].Quantity*float64(b.Transactions[transaction.OrderID].Value)), "]")
+	log.Println("BUY SUCCESS ", transaction.Date, " Order [", order.Value, "] Tx [", transaction.Value, "] Qty [", b.Transactions[transaction.OrderID].Quantity, "] VAL [", float64(b.Transactions[transaction.OrderID].Quantity*float64(b.Transactions[transaction.OrderID].Value)), "] Orders :", len(b.Transactions), " Wallet : ", b.Wallet)
 	//log.Println("WALLET STATE [", b.ID, "]: ", b.Wallet)
 
 	// Register History
 	b.NbTransactions++
-	//b.History[transaction.OrderID] = transaction
+	b.History[transaction.OrderID] = transaction
 }
 
 func (b *BotBase) SellSuccess(transaction *model.Event, order *model.Order) {
