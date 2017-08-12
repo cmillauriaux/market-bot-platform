@@ -2,13 +2,14 @@ package history
 
 import (
 	"log"
+	"time"
 
 	"github.com/cmillauriaux/market-bot-platform/model"
 	"github.com/cmillauriaux/market-bot-platform/utils"
 )
 
 // LoadHistory load an history from a CSV file
-func LoadHistory(filename string) (*History, error) {
+func LoadHistory(filename string, end time.Time) (*History, error) {
 	// Counter to measure performances
 	counter := utils.Counter{}
 	counter.StartCount()
@@ -36,6 +37,10 @@ func LoadHistory(filename string) (*History, error) {
 			if !transaction_ok {
 				transaction_closed = true
 			} else {
+				if !end.IsZero() && event.Date.After(end) {
+					log.Println("Load History until ", event.Date)
+					return history, nil
+				}
 				// Insert a new event in history
 				err := history.InsertEvent(&event)
 				if err != nil {

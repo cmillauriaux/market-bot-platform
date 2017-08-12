@@ -135,3 +135,19 @@ func (c *Coinbase) connectToWebservice(broacastFn BroadcastEvent) {
 		}
 	}
 }
+
+func (c *Coinbase) SimulateMarketTransaction(transaction *model.Event) {
+
+}
+
+func (c *Coinbase) CancelOrder(orderId string) {
+
+}
+
+func (c *Coinbase) MakeBuyOrder(size float64, value int, callback func(*model.Event, *model.Order)) *model.Order {
+	return nil
+}
+
+func (c *Coinbase) MakeSellOrder(size float64, value int, callback func(*model.Event, *model.Order)) *model.Order {
+	return nil
+}

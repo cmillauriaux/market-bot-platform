@@ -13,4 +13,8 @@ type Market interface {
 	GetSleepTimeBetweenRequests() time.Duration
 	SubscribeToFlux(broacastFn BroadcastEvent)
 	GetTransactions(start time.Time, end time.Time) ([]*model.Event, error)
+	CancelOrder(orderId string)
+	SimulateMarketTransaction(transaction *model.Event)
+	MakeBuyOrder(size float64, value int, callback func(*model.Event, *model.Order)) *model.Order
+	MakeSellOrder(size float64, value int, callback func(*model.Event, *model.Order)) *model.Order
 }
