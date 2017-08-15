@@ -9,7 +9,8 @@ import (
 )
 
 type Bot interface {
-	Init(client market.Market, wallet int)
+	Init(client market.Market, statistics *history.History, wallet int)
 	Update(history *history.History, event *model.Event, date time.Time) bool
-	Display()
+	Display() string
+	GetID() string
 }

@@ -1,23 +1,24 @@
 package supervision
 
 import (
+	"github.com/cmillauriaux/market-bot-platform/bots"
 	"github.com/cmillauriaux/market-bot-platform/history"
 	"github.com/ivpusic/neo"
 )
 
-func RunServer(history *history.History) {
+func RunServer(history *history.History, bots []bots.Bot, basePath string) {
 	app := neo.App()
 	// Compile templates
 	app.Templates(
-		"./supervision/templates/*",
+		basePath + "/templates/*",
 	)
 
 	// Serve static files
-	app.Serve("/bootstrap", "./supervision/templates/bootstrap")
-	app.Serve("/css", "./supervision/templates/css")
-	app.Serve("/js", "./supervision/templates/js")
-	app.Serve("/less", "./supervision/templates/less")
-	app.Serve("/plugins", "./supervision/templates/plugins")
+	app.Serve("/bootstrap", basePath+"/templates/bootstrap")
+	app.Serve("/css", basePath+"./templates/css")
+	app.Serve("/js", basePath+"./templates/js")
+	app.Serve("/less", basePath+"./templates/less")
+	app.Serve("/plugins", basePath+"./templates/plugins")
 
 	// Serve pages
 	app.Get("/", func(ctx *neo.Ctx) (int, error) {
@@ -31,6 +32,18 @@ func RunServer(history *history.History) {
 	})
 	app.Get("/realtime", func(ctx *neo.Ctx) (int, error) {
 		return 200, ctx.Res.Tpl("realtime", history)
+	})
+	app.Get("/bots", func(ctx *neo.Ctx) (int, error) {
+		return 200, ctx.Res.Tpl("bots", bots)
+	})
+	app.Get("/bot/:id", func(ctx *neo.Ctx) (int, error) {
+		botID := ctx.Req.Params.Get("id")
+		for _, bot := range bots {
+			if bot.GetID() == botID {
+				return 200, ctx.Res.Tpl("bot", bot)
+			}
+		}
+		return 404, nil
 	})
 	app.Start()
 }

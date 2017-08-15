@@ -20,5 +20,5 @@ func main() {
 	engine.ConnectToMarket()
 	log.Println("Connected to market")
 	log.Println("Launching supervision...")
-	engine.LaunchSupervision()
+	engine.LaunchSupervision("./supervision")
 }

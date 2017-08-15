@@ -12,3 +12,7 @@ type Event struct {
 	Value         int
 	Quantity      float64
 }
+
+func (e *Event) GetEventValue() int {
+	return int(e.Value*int(e.Quantity*100)) / 100
+}

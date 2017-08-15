@@ -1,7 +1,6 @@
 package market
 
 import (
-	"log"
 	"os"
 	"strconv"
 	"time"
@@ -69,8 +68,6 @@ func (c *Coinbase) GetStatistic(start time.Time, end time.Time) (*model.Statisti
 	value := 0
 	if nbValues > 0 {
 		value = totalValue / nbValues
-	} else {
-		log.Println("nbValues is 0 :", nbValues)
 	}
 
 	upward := false
@@ -134,7 +131,6 @@ func (c *Coinbase) connectToWebservice(broacastFn BroadcastEvent) {
 
 		if message.Type == "match" {
 			event := model.Event{OrderID: message.OrderId, Quantity: message.Size, Value: int(message.Price * 100), Date: message.Time.Time(), DisplayDate: message.Time.Time().Format("2006-01-02 15:04:05")}
-			log.Println(event)
 			broacastFn(&event)
 		}
 	}
@@ -148,10 +144,10 @@ func (c *Coinbase) CancelOrder(orderId string) {
 
 }
 
-func (c *Coinbase) MakeBuyOrder(size float64, value int, callback func(*model.Event, *model.Order)) *model.Order {
+func (c *Coinbase) MakeBuyOrder(size float64, value int, originalValue int, callback func(*model.Event, *model.Order)) *model.Order {
 	return nil
 }
 
-func (c *Coinbase) MakeSellOrder(size float64, value int, callback func(*model.Event, *model.Order)) *model.Order {
+func (c *Coinbase) MakeSellOrder(size float64, value int, originalValue int, callback func(*model.Event, *model.Order)) *model.Order {
 	return nil
 }

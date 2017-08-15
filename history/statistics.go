@@ -20,6 +20,38 @@ func (h *History) GetLastHourEvents(date time.Time) *model.Statistic {
 	return h.AggregateStatistics(h.getStatisticsFromEvents(MINUTE, true, date.Add(-time.Hour), date))
 }
 
+func (h *History) GetLastSixHourEvents(date time.Time) *model.Statistic {
+	return h.AggregateStatistics(h.getStatisticsFromEvents(MINUTE, true, date.Add(-time.Hour*6), date))
+}
+
+func (h *History) GetPreviousSixHourEvents(date time.Time) *model.Statistic {
+	return h.AggregateStatistics(h.getStatisticsFromEvents(MINUTE, true, date.Add(-time.Hour*12), date.Add(-time.Hour*6)))
+}
+
+func (h *History) GetLastDayEvents(date time.Time) *model.Statistic {
+	return h.AggregateStatistics(h.getStatisticsFromEvents(HOUR, true, date.Add(-time.Hour*24), date))
+}
+
+func (h *History) GetPreviousDayEvents(date time.Time) *model.Statistic {
+	return h.AggregateStatistics(h.getStatisticsFromEvents(HOUR, true, date.Add(-time.Hour*48), date.Add(-time.Hour*24)))
+}
+
+func (h *History) GetLastWeekEvents(date time.Time) *model.Statistic {
+	return h.AggregateStatistics(h.getStatistics(SIX_HOURS, true, date.Add(-time.Hour*24*7), date))
+}
+
+func (h *History) GetPreviousWeekEvents(date time.Time) *model.Statistic {
+	return h.AggregateStatistics(h.getStatistics(SIX_HOURS, true, date.Add(-time.Hour*24*14), date.Add(-time.Hour*24*7)))
+}
+
+func (h *History) GetLastMonthEvents(date time.Time) *model.Statistic {
+	return h.AggregateStatistics(h.getStatistics(DAY, true, date.Add(-time.Hour*24*30), date))
+}
+
+func (h *History) GetPreviousMonthEvents(date time.Time) *model.Statistic {
+	return h.AggregateStatistics(h.getStatistics(DAY, true, date.Add(-time.Hour*24*60), date.Add(-time.Hour*24*30)))
+}
+
 func (h *History) GetPreviousHourEvents(date time.Time) *model.Statistic {
 	return h.AggregateStatistics(h.getStatisticsFromEvents(MINUTE, true, date.Add(-time.Hour*2), date.Add(-time.Hour)))
 }
@@ -54,6 +86,10 @@ func (h *History) Last30DaysStatistics() *model.Statistics {
 
 func (h *History) Last7DaysStatistics() *model.Statistics {
 	return h.MakeStatistics(h.getStatistics(HOUR, true, time.Now().Add(-time.Hour*24*7).Truncate(time.Hour*24), time.Now()))
+}
+
+func (h *History) ForeverStatistics() *model.Statistics {
+	return h.MakeStatistics(h.getStatistics(DAY, true, time.Unix(0, 0), time.Unix(0, 0)))
 }
 
 func (h *History) getStatisticsFromEvents(r Range, slicing bool, start time.Time, end time.Time) []*model.Statistic {
@@ -92,9 +128,6 @@ func (h *History) getStatisticsFromEvents(r Range, slicing bool, start time.Time
 			// Init list
 			beginDate = event.Date
 			currentHistory = make([]*model.Event, 0)
-
-			// Remove from begin to current
-			h.removeRealTimeUntil(h.currentDate)
 		}
 
 		// Add current day to list
@@ -152,9 +185,6 @@ func (h *History) getStatistics(r Range, slicing bool, start time.Time, end time
 			// Init list
 			beginDate = event.Date.Truncate(time.Hour * 24)
 			currentHistory = make([]*model.Statistic, 0)
-
-			// Remove from begin to current
-			h.removeRealTimeUntil(h.currentDate)
 		}
 
 		// Add current day to list

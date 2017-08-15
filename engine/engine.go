@@ -22,28 +22,26 @@ func Init(market market.Market) *Engine {
 }
 
 func (e *Engine) LoadHistory(fileName string, end time.Time) {
-	history, err := history.LoadHistory(fileName, end)
+	err := e.History.LoadHistory(fileName, end)
 	if err != nil {
 		log.Fatal(err)
 	}
 	log.Println("Completing history...")
-	err = history.CompleteHistory(e.market, time.Hour*24)
+	err = e.History.CompleteHistory(e.market, time.Hour*24)
 	if err != nil {
 		log.Fatal(err)
 	}
 	log.Println("Getting realtime history...")
-	err = history.GetRealtimeInformations(e.market)
+	err = e.History.GetRealtimeInformations(e.market)
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	e.History = history
 }
 
 func (e *Engine) ConnectToMarket() {
 	e.market.SubscribeToFlux(e.History.InsertEvent)
 }
 
-func (e *Engine) LaunchSupervision() {
-	supervision.RunServer(e.History)
+func (e *Engine) LaunchSupervision(basePath string) {
+	supervision.RunServer(e.History, e.Bots, basePath)
 }

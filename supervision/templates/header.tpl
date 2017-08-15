@@ -38,6 +38,9 @@
                 <li>
                     <a href="/history-years" class="waves-effect"><i class="fa fa-font fa-fw" aria-hidden="true"></i>Global statistics</a>
                 </li>
+                <li>
+                    <a href="/bots" class="waves-effect"><i class="fa fa-font fa-fw" aria-hidden="true"></i>Bots</a>
+                </li>
             </ul>
         </div>
     </div>

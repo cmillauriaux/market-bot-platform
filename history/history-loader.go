@@ -9,16 +9,13 @@ import (
 )
 
 // LoadHistory load an history from a CSV file
-func LoadHistory(filename string, end time.Time) (*History, error) {
+func (h *History) LoadHistory(filename string, end time.Time) error {
 	// Counter to measure performances
 	counter := utils.Counter{}
 	counter.StartCount()
 
 	// Create a channel to make an async treatment
 	channel := make(chan model.Event)
-
-	// Init a new history
-	history := InitHistory()
 
 	// Launch CSV Reader
 	go func() {
@@ -39,12 +36,12 @@ func LoadHistory(filename string, end time.Time) (*History, error) {
 			} else {
 				if !end.IsZero() && event.Date.After(end) {
 					log.Println("Load History until ", event.Date)
-					return history, nil
+					return nil
 				}
 				// Insert a new event in history
-				err := history.InsertEvent(&event)
+				err := h.InsertEvent(&event)
 				if err != nil {
-					return nil, err
+					return err
 				}
 			}
 		}
@@ -54,7 +51,7 @@ func LoadHistory(filename string, end time.Time) (*History, error) {
 	log.Println("Load History complete in ", counter.StopCount().Seconds(), "s")
 
 	// Refresh statistics once data are loaded
-	history.ComputeRealTime()
+	h.ComputeRealTime()
 
-	return history, nil
+	return nil
 }

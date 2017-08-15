@@ -2,6 +2,9 @@ package bots
 
 import (
 	"log"
+	"sort"
+
+	"github.com/cmillauriaux/market-bot-platform/history"
 
 	"github.com/cmillauriaux/market-bot-platform/market"
 	"github.com/cmillauriaux/market-bot-platform/model"
@@ -11,60 +14,89 @@ import (
 type BotBase struct {
 	ID             string
 	client         market.Market
-	Transactions   map[string]*model.Event `json:"-"`
+	Statistics     *history.History
+	Transactions   map[string]*model.Order `json:"-"`
 	Orders         map[string]*model.Order `json:"-"`
-	ReverseOrders  map[string]*model.Order `json:"-"`
-	History        map[string]*model.Event `json:"-"`
+	History        map[string]*model.Order `json:"-"`
 	NbTransactions int
 	Wallet         int
 }
 
-func (b *BotBase) Init(client market.Market, wallet int) {
+func (b *BotBase) GetID() string {
+	return b.ID
+}
+
+func (b *BotBase) Init(client market.Market, statistics *history.History, wallet int) {
 	b.ID = uuid.NewV4().String()
 	b.client = client
 	b.Wallet = wallet
-	b.Transactions = make(map[string]*model.Event)
+	b.Transactions = make(map[string]*model.Order)
 	b.Orders = make(map[string]*model.Order)
-	b.ReverseOrders = make(map[string]*model.Order)
-	b.History = make(map[string]*model.Event)
+	b.History = make(map[string]*model.Order)
+	b.Statistics = statistics
 }
 
-func (b *BotBase) BuySuccess(transaction *model.Event, order *model.Order) {
-	// Make transaction
-	b.Transactions[transaction.OrderID] = transaction
-	b.Transactions[transaction.OrderID].Quantity = order.Quantity
-
+func (b *BotBase) BuySuccess(event *model.Event, order *model.Order) {
 	// Remove order
+	if b.Orders[order.OrderID] == nil {
+		log.Fatal("CAN'T SELL IT [ORDER]")
+	}
 	delete(b.Orders, order.OrderID)
-	delete(b.ReverseOrders, order.TransactionID)
 
-	// Substract from Wallet
-	b.Wallet -= int(b.Transactions[transaction.OrderID].Quantity * float64(b.Transactions[transaction.OrderID].Value))
-	log.Println("BUY SUCCESS ", transaction.Date, " Order [", order.Value, "] Tx [", transaction.Value, "] Qty [", b.Transactions[transaction.OrderID].Quantity, "] VAL [", float64(b.Transactions[transaction.OrderID].Quantity*float64(b.Transactions[transaction.OrderID].Value)), "] Orders :", len(b.Transactions), " Wallet : ", b.Wallet)
-	//log.Println("WALLET STATE [", b.ID, "]: ", b.Wallet)
+	if b.Transactions[order.OrderID] == nil {
+		// Register History
+		b.NbTransactions++
+		order.TransactionID = event.OrderID
+		order.Buy = true
+		order.Sell = false
+		order.DisplayDate = event.Date.Format("2006-01-02 15:04:05")
+		order.TransactionValue = event.Value
+		b.History[order.OrderID] = order
+
+		// Register transaction
+		b.Transactions[order.OrderID] = order
+
+		// Substract from Wallet
+		b.Wallet -= order.GetTransactionValue()
+		//log.Println("BUY SUCCESS ", event.Date, " Order [", order.OrderValue, "] Tx [", order.TransactionValue, "] Qty [", order.Quantity, "] VAL [", order.GetTransactionValue(), "] Orders :", " Wallet : ", b.Wallet)
+		//log.Println("WALLET STATE [", b.ID, "]: ", b.Wallet)
+	} else {
+		log.Fatal("CAN'T BUY IT")
+	}
+}
+
+func (b *BotBase) SellSuccess(event *model.Event, order *model.Order) {
+	// Remove order
+	if b.Orders[order.OrderID] == nil {
+		log.Fatal("CAN'T SELL IT [ORDER]")
+	}
+	delete(b.Orders, order.OrderID)
+
+	isTxFound := 0
+	for transactionID, transaction := range b.Transactions {
+		if transaction.TransactionID == order.TransactionID {
+			delete(b.Transactions, transactionID)
+			isTxFound++
+		}
+	}
+	if isTxFound != 1 {
+		//log.Fatal("TX NOT FOUND : ", isTxFound)
+		log.Println("TX NOT FOUND : ", isTxFound)
+	}
 
 	// Register History
+	order.Buy = false
+	order.Sell = true
+	order.DisplayDate = event.Date.Format("2006-01-02 15:04:05")
+	order.TransactionValue = event.Value
+	b.History[order.OrderID] = order
 	b.NbTransactions++
-	b.History[transaction.OrderID] = transaction
-}
-
-func (b *BotBase) SellSuccess(transaction *model.Event, order *model.Order) {
-	// Remove order
-	delete(b.Orders, order.OrderID)
-	delete(b.ReverseOrders, order.TransactionID)
-
-	// Remove transaction
-	delete(b.Transactions, order.TransactionID)
 
 	// Increment wallet
-	b.Wallet += int(order.Quantity * float64(transaction.Value))
-	//log.Println("SELL SUCCESS [", b.ID, ":", order.OrderID, "] : Order [", order.Value, "] Tx [", transaction.Value, "] Qty [", order.Quantity, "] VAL [", float64(order.Quantity*float64(transaction.Value)), "]")
+	b.Wallet += order.GetTransactionValue()
+	//log.Println("SELL FOR : ", order.GetTransactionValue(), order.GetOriginalValue(), order.GetPlusValue())
+	//log.Println("SELL SUCCESS ", event.Date, " Order [", order.OrderValue, "] Tx [", event.Value, "] Qty [", order.Quantity, "] VAL [", float64(order.Quantity*float64(event.Value)), "]")
 	//log.Println("WALLET STATE [", b.ID, "]: ", b.Wallet)
-
-	// Register History
-	transaction.Quantity = order.Quantity
-	//b.History[transaction.OrderID] = transaction
-	b.NbTransactions++
 }
 
 func (b *BotBase) GetWalletValue() int {
@@ -75,7 +107,7 @@ func (b *BotBase) GetTotalOrdersValue() int {
 	total := 0
 	for _, transaction := range b.Orders {
 		if transaction.Buy {
-			total += int(float64(transaction.Value) * transaction.Quantity)
+			total += transaction.GetOriginalValue()
 		}
 	}
 	return total
@@ -84,11 +116,20 @@ func (b *BotBase) GetTotalOrdersValue() int {
 func (b *BotBase) GetTotalTransactionValue() int {
 	total := 0
 	for _, transaction := range b.Transactions {
-		total += int(float64(transaction.Value) * transaction.Quantity)
+		total += transaction.GetTransactionValue()
 	}
 	return total
 }
 
-func (b *BotBase) Display() {
-	log.Println("[", b.ID, "] Wallet : ", b.Wallet, " (", b.Wallet+b.GetTotalTransactionValue(), ") orders : ", len(b.Orders), " tx : ", len(b.Transactions), " nbTx : ", b.NbTransactions)
+func (b *BotBase) GetTotalValue() int {
+	return b.Wallet + b.GetTotalTransactionValue() + b.GetTotalOrdersValue()
+}
+
+func (b *BotBase) GetHistory() []*model.Order {
+	history := make([]*model.Order, 0)
+	for _, order := range b.History {
+		history = append(history, order)
+	}
+	sort.SliceStable(history, func(i, j int) bool { return history[i].Date.Before(history[j].Date) })
+	return history
 }

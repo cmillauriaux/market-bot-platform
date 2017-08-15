@@ -23,4 +23,7 @@ TODO
 
 TODO
 
+## How to profile
+go tool pprof http://localhost:6060/debug/pprof/profile
+
 ## How to contributes
